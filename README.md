@@ -1,4 +1,4 @@
-pms framework interpreter terminal
+pms framework swoole-http terminal
 ===============
 pms 应用框架 swoole-http 解释器
 
@@ -12,7 +12,7 @@ pms 应用框架 swoole-http 解释器
 
 # 安装
 ```bash
-composer require superpms/interpreter-terminal
+composer require superpms/interpreter-swoole-http
 ```
 
 
