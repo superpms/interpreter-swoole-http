@@ -1,4 +1,4 @@
-pms framework swoole-http terminal
+pms framework swoole-http interpreter
 ===============
 pms 应用框架 swoole-http 解释器
 
