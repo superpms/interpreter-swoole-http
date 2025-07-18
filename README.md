@@ -1,6 +1,6 @@
 pms framework swoole-http interpreter
 ===============
-pms 应用框架 swoole-http 解释器
+pms 框架 swoole-http 应用解释器
 
 # 特性
 * 基于PHP `8.1+`开发

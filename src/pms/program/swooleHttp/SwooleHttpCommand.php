@@ -39,7 +39,7 @@ class SwooleHttpCommand extends TerminalCommandApp{
         }
         $http = new Server($host, $port);
         $http->set([
-            'log_file' => Path::getRuntime('/log/interpreter/swoole-http.log'),
+            'log_file' => Path::getRuntime('/interpreter/log/swoole-http.log'),
             ...$setConfig,
             'reload_async'=>true,
         ]);
