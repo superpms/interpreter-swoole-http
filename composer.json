@@ -5,8 +5,7 @@
     "description": "pms http-swoole interpreter",
     "autoload": {
         "files": [
-            "stubs/autorun.php",
-            "stubs/const.php"
+            "bin/autoload.php"
         ],
         "psr-4": {
             "pms\\": "src/pms/"
@@ -18,14 +17,14 @@
             "email": "kid666@88.com"
         }
     ],
-
     "require": {
         "php": ">=8.1",
-        "superpms/framework": "^v2.0.0",
+        "superpms/framework": "^2.0.0",
         "superpms/interpreter-terminal": "^1.0.0",
         "superpms/interpreter-http": "^1.0.0"
     },
     "require-dev": {
-        "swoole/ide-helper": "^6.0.0"
+        "swoole/ide-helper": "^6.0.0",
+        "symfony/var-dumper": "6.4.*"
     }
 }

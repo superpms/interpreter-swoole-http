@@ -1,13 +1,11 @@
 <?php
 
-namespace pms\source\InterpreterSwooleHttp\command;
+namespace pms\program\swooleHttp;
 
 use pms\annotate\Inject;
 use pms\app\TerminalCommandApp;
-use pms\facade\Config;
-use pms\facade\Db;
 use pms\facade\Path;
-use pms\facade\RDb;
+use pms\hook\SwooleHttpLifecycleHook;
 use pms\inject\TerminalInputInject;
 use pms\inject\TerminalOutputInject;
 use pms\interpreter\swooleHttp\Sandbox;
@@ -16,10 +14,6 @@ use pms\interpreter\swooleHttp\sandbox\SwooleHttpResponse;
 use Swoole\Http\Request;
 use Swoole\Http\Response;
 use Swoole\Http\Server;
-use Symfony\Component\VarDumper\Caster\ReflectionCaster;
-use Symfony\Component\VarDumper\Cloner\VarCloner;
-use Symfony\Component\VarDumper\Dumper\HtmlDumper;
-use Symfony\Component\VarDumper\VarDumper as dumper;
 
 class SwooleHttpCommand extends TerminalCommandApp{
 
@@ -34,8 +28,9 @@ class SwooleHttpCommand extends TerminalCommandApp{
 
 
     public function entry(){
-        Db::isPool(true);
-        RDb::isPool(true);
+        SwooleHttpLifecycleHook::run(SWOOLE_HTTP_LIFECYCLE_START);
+        Path::mount('WebRoot', Path::getRoot(config('http.web_root','/public')));
+
         $host = config('http.swoole.host', '127.0.0.1');
         $port = config('http.swoole.port', 9999);
         $setConfig = config('http.swoole.config', []);
@@ -63,9 +58,12 @@ class SwooleHttpCommand extends TerminalCommandApp{
             $this->initVarDumper($response);
             $myRequest = new SwooleHttpRequest($request);
             $myResponse = new SwooleHttpResponse($response);
+            SwooleHttpLifecycleHook::run(SWOOLE_HTTP_LIFECYCLE_REQUEST_ON, $myRequest,$myResponse);
             $exp = new Sandbox($myRequest, $myResponse);
             $exp->run();
+            SwooleHttpLifecycleHook::run(SWOOLE_HTTP_LIFECYCLE_REQUEST_AFTER);
         });
+        SwooleHttpLifecycleHook::run(SWOOLE_HTTP_LIFECYCLE_SERVER_INIT, $http);
         $http->start();
     }
 
@@ -87,10 +85,10 @@ class SwooleHttpCommand extends TerminalCommandApp{
     }
 
     public function initVarDumper(Response $response): void{
-        $cloner = new VarCloner();
-        $cloner->addCasters(ReflectionCaster::UNSET_CLOSURE_FILE_INFO);
-        $dumper = new HtmlDumper();
-        dumper::setHandler(function ($var, $label = null) use ($response,$cloner,$dumper) {
+        $cloner = new \Symfony\Component\VarDumper\Cloner\VarCloner();
+        $cloner->addCasters(\Symfony\Component\VarDumper\Caster\ReflectionCaster::UNSET_CLOSURE_FILE_INFO);
+        $dumper = new \Symfony\Component\VarDumper\Dumper\HtmlDumper();
+        \Symfony\Component\VarDumper\VarDumper::setHandler(function ($var, $label = null) use ($response,$cloner,$dumper) {
             $var = $cloner->cloneVar($var)?->withContext(['label' => $label]);
             ob_start();
             $dumper->dump($var);
