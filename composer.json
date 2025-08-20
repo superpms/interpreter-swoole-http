@@ -2,6 +2,8 @@
     "name": "superpms/interpreter-swoole-http",
     "license": "Apache-2.0",
     "description": "pms http-swoole interpreter",
+    "minimum-stability": "dev",
+    "prefer-stable": true,
     "autoload": {
         "files": [
             "bin/autoload.php"
