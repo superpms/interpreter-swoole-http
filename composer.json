@@ -20,7 +20,7 @@
     ],
     "require": {
         "php": ">=8.1",
-        "superpms/framework": "^2.0.0",
+        "superpms/basic": "^1.0.0",
         "superpms/interpreter-terminal": "^1.0.0",
         "superpms/interpreter-http": "^1.0.0"
     },
