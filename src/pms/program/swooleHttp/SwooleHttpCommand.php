@@ -74,7 +74,7 @@ class SwooleHttpCommand extends TerminalCommandApp{
             if (!empty($error)) {
                 swoole_clear_error();
                 $response->status(500, 'Server Error');
-                if (config('app.debug')) {
+                if ($this->bootOptions->error_debug) {
                     $response->header("content-type", JSON_CONTENT_TYPE);
                     $response->end(json_encode($error));
                 } else {
@@ -91,6 +91,7 @@ class SwooleHttpCommand extends TerminalCommandApp{
         \Symfony\Component\VarDumper\VarDumper::setHandler(function ($var, $label = null) use ($response,$cloner,$dumper) {
             $var = $cloner->cloneVar($var)?->withContext(['label' => $label]);
             ob_start();
+            $response->status(500, 'Server Error');
             $dumper->dump($var);
             $output = ob_get_clean();
             $response->header('Content-Type', "text/html");
