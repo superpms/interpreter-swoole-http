@@ -20,12 +20,6 @@ class SwooleHttpCommand extends TerminalCommandApp{
     protected string $name = "swoole-http-server";
     protected string $description = "启动 swoole-http 服务";
 
-    #[Inject(TerminalInputInject::class)]
-    protected TerminalInputInject $input;
-
-    #[Inject(TerminalOutputInject::class)]
-    protected TerminalOutputInject $output;
-
 
     public function entry(){
         $root = config('http.root','public');
