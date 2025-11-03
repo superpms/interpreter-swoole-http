@@ -2,13 +2,11 @@
 
 namespace pms\program\swooleHttp;
 
-use pms\annotate\Inject;
 use pms\app\TerminalCommandApp;
 use pms\facade\Path;
+use pms\hook\HttpLifecycleHook;
 use pms\hook\SwooleHttpLifecycleHook;
-use pms\inject\TerminalInputInject;
-use pms\inject\TerminalOutputInject;
-use pms\interpreter\swooleHttp\Sandbox;
+use pms\interpreter\http\Sandbox;
 use pms\interpreter\swooleHttp\sandbox\SwooleHttpRequest;
 use pms\interpreter\swooleHttp\sandbox\SwooleHttpResponse;
 use Swoole\Http\Request;
@@ -22,6 +20,7 @@ class SwooleHttpCommand extends TerminalCommandApp{
 
 
     public function entry(){
+        HttpLifecycleHook::run(LIFECYCLE_BOOT);
         $root = config('http.root','public');
         Path::mount('WebRoot',$root);
         $host = config('http.swoole.host', '127.0.0.1');
@@ -30,7 +29,7 @@ class SwooleHttpCommand extends TerminalCommandApp{
         if (!is_array($setConfig)) {
             $setConfig = [];
         }
-        SwooleHttpLifecycleHook::run(LIFECYCLE_BOOT);
+        HttpLifecycleHook::run(LIFECYCLE_BOOTED);
         $http = new Server($host, $port);
         $http->set([
             'log_file' => Path::getRuntime('/interpreter/log/swoole-http.log'),
@@ -52,10 +51,8 @@ class SwooleHttpCommand extends TerminalCommandApp{
             $this->initVarDumper($response);
             $myRequest = new SwooleHttpRequest($request);
             $myResponse = new SwooleHttpResponse($response);
-            SwooleHttpLifecycleHook::run(LIFECYCLE_SANDBOX_BOOTED, $myRequest,$myResponse);
             $exp = new Sandbox($myRequest, $myResponse,$this->bootOptions);
             $exp->run();
-            SwooleHttpLifecycleHook::run(LIFECYCLE_SANDBOX_RAN);
         });
         SwooleHttpLifecycleHook::run(LIFECYCLE_SERVER_BOOTED, $http);
         $http->start();
