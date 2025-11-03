@@ -58,12 +58,12 @@ class SwooleHttpCommand extends TerminalCommandApp{
             $this->initVarDumper($response);
             $myRequest = new SwooleHttpRequest($request);
             $myResponse = new SwooleHttpResponse($response);
-            SwooleHttpLifecycleHook::run(SWOOLE_LIFECYCLE_HTTP_REQUEST_ON, $myRequest,$myResponse);
+            SwooleHttpLifecycleHook::run(LIFECYCLE_SANDBOX_BOOTED, $myRequest,$myResponse);
             $exp = new Sandbox($myRequest, $myResponse,$this->bootOptions);
             $exp->run();
-            SwooleHttpLifecycleHook::run(SWOOLE_LIFECYCLE_HTTP_REQUEST_AFTER);
+            SwooleHttpLifecycleHook::run(LIFECYCLE_SANDBOX_RAN);
         });
-        SwooleHttpLifecycleHook::run(SWOOLE_LIFECYCLE_SERVER_START, $http);
+        SwooleHttpLifecycleHook::run(LIFECYCLE_SERVER_BOOTED, $http);
         $http->start();
     }
 

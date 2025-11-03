@@ -9,10 +9,10 @@ class SwooleHttpLifecycleHook extends LifecycleHookApp
 
     public static array $container = [
         LIFECYCLE_BOOT => [],
-        SWOOLE_LIFECYCLE_SERVER_START => [],
-        SWOOLE_LIFECYCLE_HTTP_REQUEST_ON => [],
-        SWOOLE_LIFECYCLE_HTTP_REQUEST_AFTER => [],
-        SWOOLE_LIFECYCLE_HTTP_REQUEST_DESTRUCT => [],
+        LIFECYCLE_SERVER_BOOTED => [],
+        LIFECYCLE_SANDBOX_BOOTED => [],
+        LIFECYCLE_SANDBOX_RAN => [],
+        LIFECYCLE_SANDBOX_DESTRUCT => [],
     ];
 
 }
