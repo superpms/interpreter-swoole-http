@@ -28,15 +28,15 @@ class SwooleHttpCommand extends TerminalCommandApp{
 
 
     public function entry(){
-        SwooleHttpLifecycleHook::run(SWOOLE_HTTP_LIFECYCLE_START);
-        Path::mount('WebRoot', Path::getRoot(config('http.web_root','/public')));
-
+        $root = config('http.root','public');
+        Path::mount('WebRoot',$root);
         $host = config('http.swoole.host', '127.0.0.1');
         $port = config('http.swoole.port', 9999);
         $setConfig = config('http.swoole.config', []);
         if (!is_array($setConfig)) {
             $setConfig = [];
         }
+        SwooleHttpLifecycleHook::run(LIFECYCLE_BOOT);
         $http = new Server($host, $port);
         $http->set([
             'log_file' => Path::getRuntime('/interpreter/log/swoole-http.log'),
@@ -58,12 +58,12 @@ class SwooleHttpCommand extends TerminalCommandApp{
             $this->initVarDumper($response);
             $myRequest = new SwooleHttpRequest($request);
             $myResponse = new SwooleHttpResponse($response);
-            SwooleHttpLifecycleHook::run(SWOOLE_HTTP_LIFECYCLE_REQUEST_ON, $myRequest,$myResponse);
+            SwooleHttpLifecycleHook::run(SWOOLE_LIFECYCLE_HTTP_REQUEST_ON, $myRequest,$myResponse);
             $exp = new Sandbox($myRequest, $myResponse,$this->bootOptions);
             $exp->run();
-            SwooleHttpLifecycleHook::run(SWOOLE_HTTP_LIFECYCLE_REQUEST_AFTER);
+            SwooleHttpLifecycleHook::run(SWOOLE_LIFECYCLE_HTTP_REQUEST_AFTER);
         });
-        SwooleHttpLifecycleHook::run(SWOOLE_HTTP_LIFECYCLE_SERVER_INIT, $http);
+        SwooleHttpLifecycleHook::run(SWOOLE_LIFECYCLE_SERVER_START, $http);
         $http->start();
     }
 
