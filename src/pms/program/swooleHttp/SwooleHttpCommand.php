@@ -65,11 +65,19 @@ class SwooleHttpCommand extends TerminalCommandApp{
             if (!empty($error)) {
                 swoole_clear_error();
                 $response->status(500, 'Server Error');
+                $response->header("content-type", JSON_CONTENT_TYPE);
                 if ($this->bootOptions->error_debug) {
-                    $response->header("content-type", JSON_CONTENT_TYPE);
-                    $response->end(json_encode($error));
+                    $response->end(json_encode([
+                        'error' => $error,
+                        'type'=>'shutdown',
+                        'code' => 500,
+                        'message' => '系统内部错误',
+                    ]));
                 } else {
-                    $response->end();
+                    $response->end(json_encode([
+                        'message' => '系统内部错误',
+                        'code' => 500
+                    ]));
                 }
             }
         });
