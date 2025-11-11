@@ -1,8 +1,10 @@
 <?php
 namespace pms;
 
+use pms\hook\TerminalCommandHook;
+
 if(class_exists('pms\hook\TerminalCommandHook')){
-    \pms\hook\TerminalCommandHook::mount(
+    TerminalCommandHook::mount(
         'swoole-http-server',
         program\swooleHttp\SwooleHttpCommand::class
     );

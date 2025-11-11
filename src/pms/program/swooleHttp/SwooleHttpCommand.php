@@ -5,13 +5,16 @@ namespace pms\program\swooleHttp;
 use pms\app\TerminalCommandApp;
 use pms\facade\Path;
 use pms\hook\HttpLifecycleHook;
-use pms\hook\SwooleHttpLifecycleHook;
 use pms\interpreter\http\Sandbox;
 use pms\interpreter\swooleHttp\sandbox\SwooleHttpRequest;
 use pms\interpreter\swooleHttp\sandbox\SwooleHttpResponse;
 use Swoole\Http\Request;
 use Swoole\Http\Response;
 use Swoole\Http\Server;
+use Symfony\Component\VarDumper\Caster\ReflectionCaster;
+use Symfony\Component\VarDumper\Cloner\VarCloner;
+use Symfony\Component\VarDumper\Dumper\HtmlDumper;
+use Symfony\Component\VarDumper\VarDumper;
 
 class SwooleHttpCommand extends TerminalCommandApp{
 
@@ -54,7 +57,7 @@ class SwooleHttpCommand extends TerminalCommandApp{
             $exp = new Sandbox($myRequest, $myResponse,$this->bootOptions);
             $exp->run();
         });
-        SwooleHttpLifecycleHook::run(LIFECYCLE_SERVER_BOOTED, $http);
+		HttpLifecycleHook::run(LIFECYCLE_SERVER_BOOTED, $http);
         $http->start();
     }
 
@@ -84,10 +87,10 @@ class SwooleHttpCommand extends TerminalCommandApp{
     }
 
     public function initVarDumper(Response $response): void{
-        $cloner = new \Symfony\Component\VarDumper\Cloner\VarCloner();
-        $cloner->addCasters(\Symfony\Component\VarDumper\Caster\ReflectionCaster::UNSET_CLOSURE_FILE_INFO);
-        $dumper = new \Symfony\Component\VarDumper\Dumper\HtmlDumper();
-        \Symfony\Component\VarDumper\VarDumper::setHandler(function ($var, $label = null) use ($response,$cloner,$dumper) {
+        $cloner = new VarCloner();
+        $cloner->addCasters(ReflectionCaster::UNSET_CLOSURE_FILE_INFO);
+        $dumper = new HtmlDumper();
+        VarDumper::setHandler(function ($var, $label = null) use ($response,$cloner,$dumper) {
             $var = $cloner->cloneVar($var)?->withContext(['label' => $label]);
             ob_start();
             $response->status(500, 'Server Error');
