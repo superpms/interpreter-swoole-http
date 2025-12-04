@@ -3,6 +3,7 @@
 namespace pms\program\swooleHttp;
 
 use pms\app\TerminalCommandApp;
+use pms\facade\BootOptions;
 use pms\facade\Path;
 use pms\hook\HttpLifecycleHook;
 use pms\interpreter\http\Sandbox;
@@ -16,16 +17,18 @@ use Symfony\Component\VarDumper\Cloner\VarCloner;
 use Symfony\Component\VarDumper\Dumper\HtmlDumper;
 use Symfony\Component\VarDumper\VarDumper;
 
-class SwooleHttpCommand extends TerminalCommandApp{
+class SwooleHttpCommand extends TerminalCommandApp
+{
 
     protected string $name = "swoole-http-server";
     protected string $description = "启动 swoole-http 服务";
 
 
-    public function entry(){
+    public function entry()
+    {
         HttpLifecycleHook::run(LIFECYCLE_BOOT);
-        $root = config('http.root','public');
-        Path::mount('WebRoot',$root);
+        $root = config('http.root', 'public');
+        Path::mount('WebRoot', $root);
         $host = config('http.swoole.host', '127.0.0.1');
         $port = config('http.swoole.port', 9999);
         $setConfig = config('http.swoole.config', []);
@@ -37,9 +40,18 @@ class SwooleHttpCommand extends TerminalCommandApp{
         $http->set([
             'log_file' => Path::getRuntime('/interpreter/log/swoole-http.log'),
             ...$setConfig,
-            'reload_async'=>true,
+            'reload_async' => true,
         ]);
         $output = $this->output;
+//
+//        $http->on('WorkerStart', function (Server $server, int $workerId) {
+//            var_dump('WorkerStart:' . $workerId);
+////            require Path::getRoot( '/vendor/autoload.php');
+//
+//        });
+//        $http->on('WorkerExit', function ($server, $workerId) {
+//            echo "Worker {$workerId} 准备退出\n";
+//        });
         $http->on('start', function (Server $server) use ($output, $host, $port) {
             $output->writeArrayBlock([
                 $output->setBoldStr($output->setColorStr(TERMINAL_COLOR_GREEN, "● PHP Swoole-Http 服务器")),
@@ -54,25 +66,25 @@ class SwooleHttpCommand extends TerminalCommandApp{
             $this->initVarDumper($response);
             $myRequest = new SwooleHttpRequest($request);
             $myResponse = new SwooleHttpResponse($response);
-            $exp = new Sandbox($myRequest, $myResponse,$this->bootOptions);
+            $exp = new Sandbox($myRequest, $myResponse);
             $exp->run();
         });
-		HttpLifecycleHook::run(LIFECYCLE_SERVER_BOOTED, $http);
+        HttpLifecycleHook::run(LIFECYCLE_SERVER_BOOTED, $http);
         $http->start();
     }
 
 
     public function customShutDownHandler($response): void{
-        register_shutdown_function(function ()use($response) {
+        register_shutdown_function(function () use ($response) {
             $error = error_get_last();
             if (!empty($error)) {
                 swoole_clear_error();
                 $response->status(500, 'Server Error');
                 $response->header("content-type", JSON_CONTENT_TYPE);
-                if ($this->bootOptions->error_debug) {
+                if (BootOptions::get_error_debug()) {
                     $response->end(json_encode([
                         'error' => $error,
-                        'type'=>'shutdown',
+                        'type' => 'shutdown',
                         'code' => 500,
                         'message' => '系统内部错误',
                     ]));
@@ -86,11 +98,12 @@ class SwooleHttpCommand extends TerminalCommandApp{
         });
     }
 
-    public function initVarDumper(Response $response): void{
+    public function initVarDumper(Response $response): void
+    {
         $cloner = new VarCloner();
         $cloner->addCasters(ReflectionCaster::UNSET_CLOSURE_FILE_INFO);
         $dumper = new HtmlDumper();
-        VarDumper::setHandler(function ($var, $label = null) use ($response,$cloner,$dumper) {
+        VarDumper::setHandler(function ($var, $label = null) use ($response, $cloner, $dumper) {
             $var = $cloner->cloneVar($var)?->withContext(['label' => $label]);
             ob_start();
             $response->status(500, 'Server Error');
