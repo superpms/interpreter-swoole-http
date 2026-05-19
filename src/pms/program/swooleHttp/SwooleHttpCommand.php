@@ -44,6 +44,11 @@ class SwooleHttpCommand extends TerminalCommandApp
             'des' => 'Web根目录',
             'default' => ''
         ],
+        'daemonize' => [
+            'type' => COMMAND_OPTION_TYPE,
+            'des' => '是否以守护进程模式运行',
+            'default' => ''
+        ],
     ];
 
     public function entry()
@@ -59,25 +64,67 @@ class SwooleHttpCommand extends TerminalCommandApp
         if (!is_array($setConfig)) {
             $setConfig = [];
         }
+        $daemonize = filter_var($this->input->getOption('daemonize'), FILTER_VALIDATE_BOOLEAN);
         HttpLifecycleHook::run(LIFECYCLE_BOOTED);
         $this->initVarDumper();
-        $http = new Server($host, $port);
-        $http->set([
+        $http = new Server($host, $port, SWOOLE_PROCESS);
+        $settings = [
             'log_file' => Path::getRuntime('/interpreter/log/swoole-http.log'),
+            'pid_file' => SwooleHttpServerControl::pidFile(),
+            'max_wait_time' => 10,
             ...$setConfig,
             'reload_async' => true,
             'enable_coroutine' => true,
-        ]);
+            'daemonize' => $daemonize,
+        ];
+        $http->set($settings);
         $output = $this->output;
-        $http->on('start', function (Server $server) use ($output, $host, $port, $webRoot) {
+        $startArgv = $_SERVER['argv'] ?? ['pms', 'swoole-http-server'];
+        $startCommand = SwooleHttpServerControl::startCommand($startArgv);
+        $http->on('start', function (Server $server) use ($output, $host, $port, $webRoot, $settings, $startCommand, $startArgv) {
+            SwooleHttpServerControl::writeState([
+                'host' => $host,
+                'port' => $port,
+                'web_root' => $webRoot,
+                'root_path' => Path::getRoot(),
+                'php_binary' => PHP_BINARY,
+                'command_binary' => (string)($_SERVER['argv'][0] ?? PHP_BINARY),
+                'start_command' => $startCommand,
+                'start_argv' => $startArgv,
+                'master_pid' => $server->master_pid,
+                'manager_pid' => $server->manager_pid,
+                'settings' => $settings,
+                'started_at' => time(),
+                'started_at_text' => date('Y-m-d H:i:s'),
+                'reload_count' => 0,
+            ], true);
             $output->writeArrayBlock([
                 $output->setBoldStr($output->setColorStr(TERMINAL_COLOR_GREEN, "● PHP Swoole-Http 服务器")),
                 '服务IP: ' . $host,
                 '服务端口: ' . $port,
                 '服务根目录: ' . $webRoot,
+                '运行模式: SWOOLE_PROCESS',
                 sprintf('本机访问地址: <http://127.0.0.1:%s/>', $port),
                 "\033[31m使用\033[1m`CTRL-C`\033[22m即可退出服务\033[0m",
             ]);
+        });
+        $http->on('beforeReload', function () {
+            $state = SwooleHttpServerControl::readState();
+            SwooleHttpServerControl::writeState([
+                'before_reload_at' => time(),
+                'before_reload_at_text' => date('Y-m-d H:i:s'),
+                'reload_count' => (int)($state['reload_count'] ?? 0) + 1,
+            ]);
+        });
+        $http->on('afterReload', function (Server $server) {
+            SwooleHttpServerControl::writeState([
+                'manager_pid' => $server->manager_pid,
+                'after_reload_at' => time(),
+                'after_reload_at_text' => date('Y-m-d H:i:s'),
+            ]);
+        });
+        $http->on('shutdown', function (Server $server) {
+            SwooleHttpServerControl::removeStateIfMaster($server->master_pid);
         });
         $http->on('request', function (Request $request, Response $response) {
             pms_error_clear();

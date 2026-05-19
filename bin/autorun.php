@@ -7,4 +7,7 @@ if(class_exists('pms\hook\TerminalCommandHook')){
     TerminalCommandHook::mount(
         program\swooleHttp\SwooleHttpCommand::class
     );
+    TerminalCommandHook::mount(
+        program\swooleHttp\SwooleHttpControlCommand::class
+    );
 }
