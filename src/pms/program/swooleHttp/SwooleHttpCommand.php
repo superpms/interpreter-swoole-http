@@ -7,6 +7,7 @@ use pms\facade\BootOptions;
 use pms\facade\Ctx;
 use pms\facade\Path;
 use pms\hook\HttpLifecycleHook;
+use pms\inject\HttpRequestInject;
 use pms\interpreter\http\Sandbox;
 use pms\interpreter\swooleHttp\sandbox\SwooleHttpRequest;
 use pms\interpreter\swooleHttp\sandbox\SwooleHttpResponse;
@@ -65,6 +66,7 @@ class SwooleHttpCommand extends TerminalCommandApp
             'log_file' => Path::getRuntime('/interpreter/log/swoole-http.log'),
             ...$setConfig,
             'reload_async' => true,
+            'enable_coroutine' => true,
         ]);
         $output = $this->output;
         $http->on('start', function (Server $server) use ($output, $host, $port, $webRoot) {
@@ -79,6 +81,7 @@ class SwooleHttpCommand extends TerminalCommandApp
         });
         $http->on('request', function (Request $request, Response $response) {
             pms_error_clear();
+            Ctx::set(HttpRequestInject::class, null);
             Ctx::set(static::DUMPER_RESPONSE_KEY, $response);
             try {
                 $myRequest = new SwooleHttpRequest($request);
@@ -88,6 +91,7 @@ class SwooleHttpCommand extends TerminalCommandApp
             } catch (Throwable $e) {
                 $this->handleRequestThrowable($e, $response);
             } finally {
+                Ctx::set(HttpRequestInject::class, null);
                 Ctx::set(static::DUMPER_RESPONSE_KEY, null);
                 pms_error_clear();
             }
