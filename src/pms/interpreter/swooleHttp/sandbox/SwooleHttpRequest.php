@@ -16,18 +16,50 @@ class SwooleHttpRequest extends HttpRequest {
          */
         $request = $args[0];
         $this->request = $request;
-        $this->server = $request->server;
+        $this->server = $request->server ?? [];
     }
 
     protected function platformInit(): void
     {
-        $this->header = $this->request->header;
+        $this->header = $this->request->header ?? [];
         ksort($this->server);
         $this->cookie = $this->request->cookie ?? [];
         $this->get = $this->request->get ?? [];
         $this->post = $this->request->post ?? [];
         $this->files = $this->request->files ?? [];
-        $this->input = $this->request->getContent() ?? "";
+        $content = $this->request->getContent();
+        $this->input = $content === false ? "" : $content;
+        $this->inputLoaded = true;
+    }
+
+    public function getContent(): string|false
+    {
+        return $this->request->getContent();
+    }
+
+    public function rawContent(): string|false
+    {
+        return $this->request->rawContent();
+    }
+
+    public function getData(): string|false
+    {
+        return $this->request->getData();
+    }
+
+    public function getMethod(): string|false
+    {
+        return $this->request->getMethod();
+    }
+
+    public function parse(string $data): int|false
+    {
+        return $this->request->parse($data);
+    }
+
+    public function isCompleted(): bool
+    {
+        return $this->request->isCompleted();
     }
 
 }

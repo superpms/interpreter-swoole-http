@@ -29,19 +29,29 @@ class SwooleHttpResponse extends HttpResponse {
         return $this->response->isWritable();
     }
 
-    public function cookie(string $name, string $value = '', int $expires = 0, string $path = '/', string $domain = '', bool $secure = false, bool $httponly = false, string $samesite = '', string $priority = ''): bool
+    public function initHeader(): bool
     {
-        return $this->response->cookie($name,$value,$expires,$path,$domain,$secure,$httponly,$samesite,$priority);
+        return $this->response->initHeader();
     }
 
-    public function setCookie(string $name, string $value = '', int $expires = 0, string $path = '/', string $domain = '', bool $secure = false, bool $httponly = false, string $samesite = '', string $priority = ''): bool
+    public function cookie(string $name, string $value = '', int $expires = 0, string $path = '/', string $domain = '', bool $secure = false, bool $httponly = false, string $samesite = '', string $priority = '', bool $partitioned = false): bool
     {
-        return $this->response->setCookie($name,$value,$expires,$path,$domain,$secure,$httponly,$samesite,$priority);
+        return $this->response->cookie($name,$value,$expires,$path,$domain,$secure,$httponly,$samesite,$priority,$partitioned);
     }
 
-    public function rawcookie(string $name, string $value = '', int $expires = 0, string $path = '/', string $domain = '', bool $secure = false, bool $httponly = false, string $samesite = '', string $priority = ''): bool
+    public function setCookie(string $name, string $value = '', int $expires = 0, string $path = '/', string $domain = '', bool $secure = false, bool $httponly = false, string $samesite = '', string $priority = '', bool $partitioned = false): bool
     {
-        return $this->response->rawcookie($name,$value,$expires,$path,$domain,$secure,$httponly,$samesite,$priority);
+        return $this->response->setCookie($name,$value,$expires,$path,$domain,$secure,$httponly,$samesite,$priority,$partitioned);
+    }
+
+    public function rawcookie(string $name, string $value = '', int $expires = 0, string $path = '/', string $domain = '', bool $secure = false, bool $httponly = false, string $samesite = '', string $priority = '', bool $partitioned = false): bool
+    {
+        return $this->response->rawcookie($name,$value,$expires,$path,$domain,$secure,$httponly,$samesite,$priority,$partitioned);
+    }
+
+    public function setRawCookie(string $name, string $value = '', int $expires = 0, string $path = '/', string $domain = '', bool $secure = false, bool $httponly = false, string $samesite = '', string $priority = '', bool $partitioned = false): bool
+    {
+        return $this->response->setRawCookie($name,$value,$expires,$path,$domain,$secure,$httponly,$samesite,$priority,$partitioned);
     }
 
     public function status(int $http_code, string $reason = ''): bool
@@ -69,12 +79,22 @@ class SwooleHttpResponse extends HttpResponse {
         return $this->response->trailer($key,$value);
     }
 
+    public function ping(string $data = ''): bool
+    {
+        return $this->response->ping($data);
+    }
+
+    public function goaway(int $error_code = 0, string $debug_data = ''): bool
+    {
+        return $this->response->goaway($error_code,$debug_data);
+    }
+
     public function write(string $content): bool
     {
         return $this->response->write($content);
     }
 
-    public function end(?string $content = null): mixed
+    public function end(?string $content = null): bool
     {
         return $this->response->end($content);
     }
@@ -96,6 +116,31 @@ class SwooleHttpResponse extends HttpResponse {
 
     public function create(object|array|int $server = -1, int $fd = -1): self|false
     {
-        return $this->response::create($server,$fd);
+        $response = Response::create($server,$fd);
+        if ($response === false) {
+            return false;
+        }
+        return new self($response);
     }
+
+    public function upgrade(): bool
+    {
+        return $this->response->upgrade();
+    }
+
+    public function push(string $data, int $opcode = 1, int $flags = 1): bool
+    {
+        return $this->response->push($data,$opcode,$flags);
+    }
+
+    public function recv(float $timeout = 0): object|string|false
+    {
+        return $this->response->recv($timeout);
+    }
+
+    public function close(): bool
+    {
+        return $this->response->close();
+    }
+
 }
