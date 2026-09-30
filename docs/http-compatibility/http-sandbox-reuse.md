@@ -43,6 +43,7 @@ pms\interpreter\http\Sandbox
 - CORS header 初始化
 - OPTIONS 请求提前结束
 - `HttpRoute` 路由解析
+- `http.app.route.prefix` 业务路径前缀校验与剥离，以及 `forward()` 指定路径的公共前缀处理
 - 静态文件判断和输出
 - app / terminal 命中判断
 - request `init()` 后的参数合并和 JSON body 解析
