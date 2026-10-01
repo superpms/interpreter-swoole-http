@@ -29,7 +29,7 @@ Composer `autoload.files` 入口。
 职责：
 
 - 解析启动选项
-- 读取 `http.swoole.*` 配置
+- 读取 `http-swoole.php` 配置
 - 挂载 WebRoot
 - 创建并设置 `Swoole\Http\Server`
 - 写入服务状态

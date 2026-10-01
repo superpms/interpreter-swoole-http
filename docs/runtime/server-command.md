@@ -22,7 +22,7 @@ protected string $description = "启动 swoole-http 服务";
 
 1. 触发 `HttpLifecycleHook::run(LIFECYCLE_BOOT)`
 2. 解析 WebRoot，并挂载 `Path::mount('WebRoot', $webRoot)`
-3. 解析 host、port 和 `http.swoole.config`
+3. 解析 host、port 和 `http-swoole.php` 中的 `config`
 4. 触发 `HttpLifecycleHook::run(LIFECYCLE_BOOTED)`
 5. 初始化 VarDumper handler
 6. 创建 `new Swoole\Http\Server($host, $port, SWOOLE_PROCESS)`
@@ -47,7 +47,7 @@ protected string $description = "启动 swoole-http 服务";
 ]
 ```
 
-其中 `$setConfig` 来自 `config('http.swoole.config', [])`。注意合并顺序：`reload_async`、`enable_coroutine` 和 `daemonize` 写在展开配置之后，因此当前实现会强制覆盖同名配置。
+其中 `$setConfig` 来自 `$swooleConfig['config'] ?? []`。注意合并顺序：`reload_async`、`enable_coroutine` 和 `daemonize` 写在展开配置之后，因此当前实现会强制覆盖同名配置。
 
 ## start 事件
 
@@ -92,7 +92,7 @@ protected string $description = "启动 swoole-http 服务";
 3. 保存当前 Swoole response 到 VarDumper 上下文
 4. 构造 `SwooleHttpRequest`
 5. 构造 `SwooleHttpResponse`
-6. 创建 `pms\interpreter\http\Sandbox`
+6. 调用 `pms\interpreter\http\Interpreter::dispatch($myRequest, $myResponse)`，分发 HTTP 业务、MCP 挂载入口与静态资源
 7. 执行 `$exp->run()`
 
 捕获到 `Throwable` 时，`handleRequestThrowable()` 会在 response 仍可写时输出 500 JSON。`BootOptions::get_error_debug()` 为真时包含 message、error、file、line、trace；否则只输出通用错误。

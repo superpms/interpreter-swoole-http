@@ -8,7 +8,7 @@ use pms\facade\Ctx;
 use pms\facade\Path;
 use pms\hook\HttpLifecycleHook;
 use pms\inject\HttpRequestInject;
-use pms\interpreter\http\Sandbox;
+use pms\interpreter\http\Interpreter;
 use pms\interpreter\swooleHttp\sandbox\SwooleHttpRequest;
 use pms\interpreter\swooleHttp\sandbox\SwooleHttpResponse;
 use Throwable;
@@ -58,9 +58,10 @@ class SwooleHttpCommand extends TerminalCommandApp
         $root = $rootOption ?: config('http.web_root', '/public');
         $webRoot = $this->resolveWebRoot($root, !empty($rootOption));
         Path::mount('WebRoot', $webRoot);
-        $host = $this->input->getOption('host') ?: config('http.swoole.host', '127.0.0.1');
-        $port = (int)($this->input->getOption('port') ?: config('http.swoole.port', 9999));
-        $setConfig = config('http.swoole.config', []);
+        $swooleConfig = config('http-swoole', []);
+        $host = $this->input->getOption('host') ?: ($swooleConfig['host'] ?? '127.0.0.1');
+        $port = (int)($this->input->getOption('port') ?: ($swooleConfig['port'] ?? 9999));
+        $setConfig = $swooleConfig['config'] ?? [];
         if (!is_array($setConfig)) {
             $setConfig = [];
         }
@@ -133,8 +134,7 @@ class SwooleHttpCommand extends TerminalCommandApp
             try {
                 $myRequest = new SwooleHttpRequest($request);
                 $myResponse = new SwooleHttpResponse($response);
-                $exp = new Sandbox($myRequest, $myResponse);
-                $exp->run();
+                Interpreter::dispatch($myRequest, $myResponse);
             } catch (Throwable $e) {
                 $this->handleRequestThrowable($e, $response);
             } finally {

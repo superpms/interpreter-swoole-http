@@ -11,11 +11,10 @@
 ```php
 $myRequest = new SwooleHttpRequest($request);
 $myResponse = new SwooleHttpResponse($response);
-$exp = new Sandbox($myRequest, $myResponse);
-$exp->run();
+\pms\interpreter\http\Interpreter::dispatch($myRequest, $myResponse);
 ```
 
-这里的 `Sandbox` 是：
+HTTP 业务处理使用的 `Sandbox` 是：
 
 ```php
 pms\interpreter\http\Sandbox
@@ -44,6 +43,7 @@ pms\interpreter\http\Sandbox
 - OPTIONS 请求提前结束
 - `HttpRoute` 路由解析
 - `http.app.route.prefix` 业务路径前缀校验与剥离，以及 `forward()` 指定路径的公共前缀处理
+- `request->builder()` 默认添加配置的业务前缀；静态资源地址通过第二参数 `false` 直接拼接
 - 静态文件判断和输出
 - app / terminal 命中判断
 - request `init()` 后的参数合并和 JSON body 解析
@@ -66,7 +66,7 @@ pms\interpreter\http\Sandbox
 - 注册 shutdown handler
 - 挂载 WebRoot
 - 触发 HTTP 生命周期
-- 运行 `Sandbox`
+- 调用 `Interpreter::dispatch()`，按挂载点进入 HTTP 业务 Sandbox 与已注册协议解释器
 
 Swoole HTTP 没有调用 `Interpreter::entry()`。它在 Swoole server 的 request 回调中手动构造 sandbox。
 
@@ -96,3 +96,9 @@ Swoole HTTP 没有调用 `Interpreter::entry()`。它在 Swoole server 的 reque
 | 请求内异常格式不对 | `interpreter-http` 的 `Sandbox::exceptionHandle()` / `HttpExceptionHandle` |
 
 本包文档只覆盖 Swoole 包自身边界，不复制普通 HTTP 包的完整说明。
+
+## MCP 根入口与转发请求
+
+普通 HTTP 与 Swoole HTTP 共用 Interpreter::dispatch()。HTTP 内置挂载点读取 http.app.route.prefix；安装 interpreter-mcp-http 后，MCP 挂载点读取 mcp.route.prefix，公开 OAuth 元数据入口跟随配置生成。HttpEntrypointHook 在配置加载后匹配处理器提供的路径，按最长完整路径段分派；匹配后由各处理器执行所属链路。MCP 注入可信路径参数后执行宿主认证器。内部 forward() 保持直接进入业务 Sandbox。
+
+SwooleHttpRequest 的 getContent()/rawContent() 返回已初始化请求体，withParams() 副本返回替换后的 JSON 参数；getMethod() 与副本的方法一致。外层请求体、方法和认证上下文保持各自的请求状态。一次性本机 Swoole HTTP 收发验证覆盖初始化、现代发现、资源元数据、OAuth 挑战及实际业务转发。

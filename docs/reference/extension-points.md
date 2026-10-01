@@ -20,7 +20,7 @@
 适合修改：
 
 - 默认 settings
-- `http.swoole.config` 合并规则
+- `http-swoole.php` 中的 `config` 合并规则
 - 事件回调
 - `LIFECYCLE_SERVER_BOOTED` 传参
 
@@ -115,7 +115,7 @@ Swoole HTTP 是常驻进程，开发时要主动区分“服务级状态”和�
 1. 这个问题是否真的属于 Swoole 运行时，而不是 HTTP sandbox 主链？
 2. 是否会影响 restart/status 对已有进程的识别？
 3. 是否会让 request 级对象跨请求泄漏？
-4. 是否会改变 `http.swoole.config` 的覆盖语义？
+4. 是否会改变 `http-swoole.php` 中的 `config` 的覆盖语义？
 5. 是否需要同步普通 HTTP response/request 的行为？
 6. 是否需要更新 README 或对应 docs 分区？
 

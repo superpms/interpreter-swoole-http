@@ -1,6 +1,6 @@
 # superpms/interpreter-swoole-http
 
-`superpms/interpreter-swoole-http` 为 PMS HTTP 解释器提供 Swoole HTTP Server 运行时。它不重新实现路由、接口执行或业务响应协议，而是在 Swoole 常驻进程中把 `Swoole\Http\Request` / `Swoole\Http\Response` 适配成 `superpms/interpreter-http` 已有的 request / response sandbox，再交给 HTTP sandbox 主链执行。
+`superpms/interpreter-swoole-http` 为 PMS HTTP 解释器提供 Swoole HTTP Server 运行时。它不重新实现路由、接口执行或业务响应协议，而是在 Swoole 常驻进程中把 `Swoole\Http\Request` / `Swoole\Http\Response` 适配成 `superpms/interpreter-http` 已有的 request / response sandbox，再交给 HTTP 解释器的统一挂载分发入口执行。
 
 ## 包定位
 
@@ -44,9 +44,11 @@ php pms swoole-http-server --daemonize 1
 启动命令会读取这些配置，并允许部分值被命令行参数覆盖：
 
 - `http.web_root`：默认 Web 根目录，默认值 `/public`
-- `http.swoole.host`：默认监听地址，默认值 `127.0.0.1`
-- `http.swoole.port`：默认监听端口，默认值 `9999`
-- `http.swoole.config`：传给 `Swoole\Http\Server::set()` 的配置数组
+- `http-swoole.php` 中的 `host`：默认监听地址，默认值 `127.0.0.1`
+- `http-swoole.php` 中的 `port`：安装模板值 `9500`，缺少配置时的运行默认值 `9999`
+- `http-swoole.php` 中的 `config`：传给 `Swoole\Http\Server::set()` 的配置数组
+
+安装钩子按 `"http-swoole": "resource/config.php"` 创建缺少的独立配置文件，保留已有文件。启动命令读取 `config('http-swoole', [])`，命令行 `host`、`port` 优先于文件配置。
 
 运行时状态默认写入框架 runtime：
 
@@ -72,7 +74,7 @@ php pms swoole-http-server --daemonize 1
 1. 清理当前请求错误上下文和 request 注入
 2. 构造 `SwooleHttpRequest`
 3. 构造 `SwooleHttpResponse`
-4. 创建 `pms\interpreter\http\Sandbox`
+4. 调用 `pms\interpreter\http\Interpreter::dispatch()`，按宿主配置分发 HTTP 与 MCP 挂载入口
 5. 复用 `interpreter-http` 的路由、静态文件、中间件、接口执行、异常处理与响应序列化机制
 6. finally 阶段清理 request 注入、VarDumper response 上下文和错误上下文
 

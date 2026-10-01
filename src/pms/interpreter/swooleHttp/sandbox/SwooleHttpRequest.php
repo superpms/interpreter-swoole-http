@@ -34,12 +34,12 @@ class SwooleHttpRequest extends HttpRequest {
 
     public function getContent(): string|false
     {
-        return $this->request->getContent();
+        return $this->inputLoaded ? $this->input : $this->request->getContent();
     }
 
     public function rawContent(): string|false
     {
-        return $this->request->rawContent();
+        return $this->inputLoaded ? $this->input : $this->request->rawContent();
     }
 
     public function getData(): string|false
@@ -49,7 +49,7 @@ class SwooleHttpRequest extends HttpRequest {
 
     public function getMethod(): string|false
     {
-        return $this->request->getMethod();
+        return $this->method();
     }
 
     public function parse(string $data): int|false

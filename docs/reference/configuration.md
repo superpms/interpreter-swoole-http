@@ -1,58 +1,38 @@
-# 配置项参考
+# Swoole HTTP 配置文件
 
-本包读取的配置集中在 `http.web_root` 和 `http.swoole.*`。
-
-## http.web_root
-
-默认值：
+Swoole 服务配置位于宿主配置目录的 `http-swoole.php`，文件直接返回：
 
 ```php
-config('http.web_root', '/public')
+return [
+    'host' => '127.0.0.1',
+    'port' => 9500,
+    'config' => [
+        'worker_num' => 10,
+        'reload_async' => true,
+        'max_wait_time' => 10,
+    ],
+];
 ```
 
-用途：
-
-- 作为未传 `--root` 时的 WebRoot
-- 最终通过 `Path::mount('WebRoot', $webRoot)` 挂载
-- 被 `interpreter-http` 的静态文件输出逻辑使用
-
-命令行 `--root` 优先级高于配置。
-
-## http.swoole.host
-
-默认值：
+配置加载器以 `http-swoole` 为配置命名空间。启动命令通过全局 `config()` 读取：
 
 ```php
-config('http.swoole.host', '127.0.0.1')
+$swooleConfig = config('http-swoole', []);
 ```
 
-用途：传给 `new Swoole\Http\Server($host, $port, SWOOLE_PROCESS)`。
+| 字段 | 用途 | 命令内置默认值 |
+| --- | --- | --- |
+| host | Swoole 监听地址 | 127.0.0.1 |
+| port | Swoole 监听端口 | 9999 |
+| config | 传给 Swoole Server::set() 的设置 | [] |
 
-命令行 `--host` 优先级高于配置。
+安装模板的端口为 9500。已有 `http-swoole.php` 时安装钩子保留宿主文件。Composer `extra.pms.config` 登记 `"http-swoole": "resource/config.php"`，由宿主根项目 post-autoload-dump 执行 `@php pms vendor:install:hook`。
 
-## http.swoole.port
+## WebRoot
 
-默认值：
+WebRoot 共用 HTTP 配置 `config('http.web_root', '/public')`，命令行 `--root` 优先，最终通过 Path::mount('WebRoot', $webRoot) 挂载。
 
-```php
-config('http.swoole.port', 9999)
-```
-
-用途：传给 `new Swoole\Http\Server($host, $port, SWOOLE_PROCESS)`。
-
-命令行 `--port` 优先级高于配置。
-
-## http.swoole.config
-
-默认值：
-
-```php
-config('http.swoole.config', [])
-```
-
-用途：作为 Swoole server settings 的扩展配置传给 `$http->set($settings)`。
-
-当前最终 settings 结构：
+## 设置合并
 
 ```php
 [
@@ -66,49 +46,24 @@ config('http.swoole.config', [])
 ]
 ```
 
-覆盖规则：
+`$setConfig` 来自 `$swooleConfig['config'] ?? []`。它可以覆盖前面的 log_file、pid_file、max_wait_time。reload_async、enable_coroutine、daemonize 以命令实现为准。
 
-- `http.swoole.config` 可以覆盖前面的 `log_file`、`pid_file`、`max_wait_time`
-- 但当前代码会在展开后再次写入 `reload_async`、`enable_coroutine`、`daemonize`
-- 因此这三个键以命令实现为准
+## 命令行优先级
 
-## 命令行选项优先级
-
-| 运行参数 | 优先级 |
+| 参数 | 优先级 |
 | --- | --- |
-| host | `--host` > `http.swoole.host` > `127.0.0.1` |
-| port | `--port` > `http.swoole.port` > `9999` |
-| root | `--root` > `http.web_root` > `/public` |
-| daemonize | `--daemonize` 的布尔解析结果 |
+| host | --host > http-swoole.php 中的 host > 127.0.0.1 |
+| port | --port > http-swoole.php 中的 port > 9999 |
+| root | --root > http.web_root > /public |
+| daemonize | --daemonize 经 FILTER_VALIDATE_BOOLEAN 解析的结果 |
 
-`--daemonize` 通过 `filter_var(..., FILTER_VALIDATE_BOOLEAN)` 解析。
-
-## runtime 文件
+## 运行文件
 
 | 类型 | 路径 |
 | --- | --- |
-| Swoole log | `runtime/interpreter/log/swoole-http.log` |
-| PID file | `runtime/interpreter/pid/swoole-http.pid` |
-| state file | `runtime/interpreter/pid/swoole-http.json` |
-| restart log | `runtime/interpreter/log/swoole-http.restart.<YmdHis>.log` |
+| 日志 | runtime/interpreter/log/swoole-http.log |
+| PID | runtime/interpreter/pid/swoole-http.pid |
+| 状态 | runtime/interpreter/pid/swoole-http.json |
+| 重启日志 | runtime/interpreter/log/swoole-http.restart.<YmdHis>.log |
 
-实际路径由 `Path::getRuntime()` 解析。
-
-## 配置示例
-
-```php
-return [
-    'web_root' => '/public',
-    'swoole' => [
-        'host' => '127.0.0.1',
-        'port' => 9999,
-        'config' => [
-            'worker_num' => 4,
-            'max_request' => 10000,
-            'max_wait_time' => 10,
-        ],
-    ],
-];
-```
-
-具体配置文件位置由框架配置加载规则决定，本包只读取 `config()` 中已经可用的值。
+实际路径由 Path::getRuntime() 解析。

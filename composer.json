@@ -27,5 +27,12 @@
     "require-dev": {
         "swoole/ide-helper": "^6.0.0",
         "symfony/var-dumper": "6.4.*"
+    },
+    "extra": {
+        "pms": {
+            "config": {
+                "http-swoole": "resource/config.php"
+            }
+        }
     }
 }

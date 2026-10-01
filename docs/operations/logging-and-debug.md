@@ -8,7 +8,7 @@
 'log_file' => Path::getRuntime('/interpreter/log/swoole-http.log')
 ```
 
-如果 `http.swoole.config` 中也传入 `log_file`，当前实现允许该配置覆盖内置默认值，因为 `$setConfig` 在内置 `log_file` 之后展开。
+如果 `http-swoole.php` 中的 `config` 中也传入 `log_file`，当前实现允许该配置覆盖内置默认值，因为 `$setConfig` 在内置 `log_file` 之后展开。
 
 ## restart 日志
 

@@ -21,8 +21,8 @@ php pms swoole-http-server
 
 | 选项 | 来源 | 说明 |
 | --- | --- | --- |
-| `--host` | 命令选项，缺省读 `http.swoole.host` | 监听地址 |
-| `--port` | 命令选项，缺省读 `http.swoole.port` | 监听端口 |
+| `--host` | 命令选项，缺省读 `http-swoole.php` 中的 `host` | 监听地址 |
+| `--port` | 命令选项，缺省读 `http-swoole.php` 中的 `port` | 监听端口 |
 | `--root` | 命令选项，缺省读 `http.web_root` | Web 根目录 |
 | `--daemonize` | 命令选项 | 是否守护进程运行 |
 
